@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #app{
+      width: 500px;
+      margin: 10px auto;
+    }
+    div{
+      width: 500px;
+      box-sizing: border-box;
+    }
+    input[type='button'] {
+      margin-left: 10px;
+    }
+    .dv{
+      border: 1px solid #000;
+      padding: 5px;
+      margin-bottom: 10px;
+    }
+    .tb{
+      width: 100%;
+
+    }
+    table{
+      width: 500px;
+      border-collapse: collapse;
+      text-align: center;
+    }
+    th{
+      background-color: #0094ff;
+      color: #fff;
+    }
+    th,td{
+      padding: 5px;
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="dv">品牌名称：<input type="text" name="pinpai" v-model="brandName" ref="inputAdd"><input type="button" value="添加" @click.prevent="hanldeAdd"></div>
+    <div class="dv">品牌名称：<input type="search" placeholder="请输入搜索条件" v-model="searchKey"></div>
+    <div class="tb">
+      <table>
+        <tr>
+          <th>编号</th>
+          <th>品牌名称</th>
+          <th>创建时间</th>
+          <th>操作</th>
+        </tr>
+        <tr v-for="value in newList" :key="value.id">
+          <td>{{value.id}}</td>
+          <td>{{value.name}}</td>
+          <td>{{value.time | fmtDate('YYYY-MM-DD HH:mm:ss')}}</td>
+          <td><a href="#" @click.prevent = "handleDelete(value.id)">删除</a></td>
+        </tr>
+        <tr v-if="newList.length == '0'">
+          <td colspan="4">没有品牌数据</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <script src="../js/vue.js"></script>
+  <script src="../js/moment.js"></script>
+  <script>
+    //全局过滤器处理时间
+    Vue.filter('fmtDate',function(value,fmtStr){
+      return moment(value).format(fmtStr);
+    });
+    var vm = new Vue({
+      el: '#app',
+      data: {
+        //品牌列表
+        list: [
+          {
+            id: 1,
+            name: 'LV',
+            time: new Date()
+          },
+          {
+            id: 2,
+            name: 'Apple',
+            time: new Date()
+          },
+          {
+            id: 3,
+            name: 'huawei',
+            time: new Date()
+          }
+        ],
+        brandName: '',
+        searchKey: ''
+      },
+      //生命周期
+      mounted() {
+        this.$refs.inputAdd.focus();
+      },
+      methods: {
+        handleDelete(id) {
+          //提示用户是否删除
+          var isOk = confirm('是否删除此条信息？');
+          if(isOk) {
+            var id = id -1;
+            this.list.splice(id,1);
+          }
+        },
+        hanldeAdd() {
+          //获取list中的最后一个id
+          var id = this.list[this.list.length-1].id + 1
+          var obj = {
+            id: id,
+            name: this.brandName,
+            time: new Date()
+          }
+          this.list.push(obj);
+          //清空文本框
+          this.brandName = '';
+        }
+      },
+      //计算属性
+      computed: {
+        newList() {
+          return this.list.filter((item)=>{
+            return item.name.startsWith(this.searchKey);
+          });
+        }
+      },
+    });
+  </script>
+</body>
+</html>

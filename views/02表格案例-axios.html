@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    #app{
+      width: 600px;
+      margin: 100px auto;
+    }
+    .dv{
+      width: 600px;
+      border: 1px solid #000;
+      padding: 5px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    input[type='button'] {
+      margin-left: 10px;
+    }
+    table{
+      width: 600px;
+      text-align: center;
+      border-collapse: collapse;
+    }
+    th{
+      color: #fff;
+      background-color: skyblue;
+    }
+    th,td{
+      border: 1px solid #000;
+      
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="dv">品牌名称：<input type="text" ref="inputAdd"  v-model="brandName"><input type="button" value="添加" @click="handleAdd"></div>
+    <div class="dv">品牌名称：<input type="text" placeholder="请输入查询条件" v-model.trim="searchKey"></div>
+    <div class="tb">
+      <table>
+        <tr>
+          <th>编号</th>
+          <th>品牌名称</th>
+          <th>创建时间</th>
+          <th>操作</th>
+        </tr>
+        <tr v-for="(item,index) in brandList" :key="item.id">
+          <td>{{index + 1}}</td>
+          <td>{{item.name}}</td>
+          <td>{{item.date | fmtDate('YYYY-MM-DD HH:mm:ss')}}</td>
+          <td><a href="#" @click.prevent="handleDelete(item.id)">删除</a></td>
+        </tr>
+        <tr v-if="brandList.length === 0">
+          <td colspan="4">没有品牌数据</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <script src="../js/vue.js"></script>
+  <script src="../js/moment.js"></script>
+  <script src="../js/axios.js"></script>
+  <script>
+    Vue.filter('fmtDate',(value,fmtStr)=>{
+      return moment(value).format(fmtStr);
+    });
+    var vm = new Vue({
+      el: '#app',
+      data: {
+        brandList: [],
+        brandName: '',
+        searchKey: ''
+      },
+      mounted() {
+        this.init();
+        this.$refs.inputAdd.focus();
+      },
+      methods: {
+        //加载列表数据
+        init() {
+          axios.get('http://localhost:3000/brands')
+            .then((res)=>{
+              if(res.status === 200) {
+                this.brandList = res.data;
+              }
+            })
+            .catch((err)=>{
+              console.log(err);
+            });
+        },
+        handleDelete(id) {
+          axios.delete(`http://localhost:3000/brands/${id}`)
+            .then((res)=>{
+              var isOk = confirm('您确认删除吗？');
+              if(isOk && res.status === 200) {
+                //删除成功，刷新列表
+                this.init();
+              } else {
+                alert('删除失败');
+              }
+            })
+            .catch((err)=>{
+              console.log(err);
+            });
+        },
+        handleAdd() {
+          axios.post('http://localhost:3000/brands',{
+            name: this.brandName,
+            date: new Date()
+          })
+            .then((res)=>{
+              if(res.status === 201) {
+                this.init();
+                this.brandName = '';
+              }
+            })
+            .catch((err)=>{
+              console.log(err);
+            });
+        }
+      },
+      watch: {
+        //监视搜索文本内容
+        searchKey(newValue,oldValue) {
+          axios.get('http://localhost:3000/brands',{
+            params: {
+              name_like: newValue
+            }
+          })
+            .then((res)=>{
+              if(res.status === 200) {
+                this.brandList = res.data;
+              }
+            })
+            .catch((err)=>{
+              console.log(err);
+            });
+        }
+      },
+    });
+  </script>
+</body>
+</html>
